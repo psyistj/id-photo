@@ -664,6 +664,11 @@ input[type="range"]::-webkit-slider-thumb {
   background: repeating-conic-gradient(#808080 0% 25%, #404040 0% 50%) 50% / 8px 8px;
 }
 
+.swatch-white { background: #ffffff; border: 1px solid #d1d5db; }
+.swatch-blue { background: #1e6be6; }
+.swatch-red { background: #c41818; }
+.swatch-gray { background: #f5f7fa; }
+
 .color-label {
   font-size: 10px;
   color: #cbd5e1;

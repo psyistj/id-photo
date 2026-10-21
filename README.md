@@ -36,23 +36,14 @@ python3 -m http.server 8080
 
 ---
 
-## 🌐 Nginx 生产环境部署配置
+## 🌐 生产部署（plustech 集中网关）
 
-配合 `pagerouter` / `plustech` 集中网关，只需在 Nginx server 块中引入 `deploy/nginx-location.conf`：
+- **线上地址**：https://hub.plustech.cc/id-photo/
+- **托管方式**：现有 Nginx 网关静态托管 `/srv/id-photo/current/`，无需 Node 进程、容器、新端口或数据库。
+- **路由配置**：`deploy/nginx-location.conf`，由 `deploy/remote-deploy.py` 安装为 `/etc/nginx/id-photo.locations.conf`，并在 `/etc/nginx/pagerouter-domain.conf` 的 `hub.plustech.cc` HTTPS server 内插入 include（位于 catch-all 路由之前）。
+- **CSP**：`default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'none'`，从策略层保证页面无法发起任何网络请求。
 
-```nginx
-location /id-photo/ {
-    alias /var/www/id-photo/;
-    index index.html;
-    try_files $uri $uri/ /id-photo/index.html;
-
-    # 启用现代静态资源缓存与无缓存 HTML
-    location ~* \.(?:css|js|svg|png|jpg|webp)$ {
-        expires 7d;
-        add_header Cache-Control "public, no-transform";
-    }
-}
-```
+完整发布/回滚步骤见 [`deploy/README.md`](deploy/README.md)。
 
 ---
 
