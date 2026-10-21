@@ -306,6 +306,7 @@
         state.img = img;
         state.imgLoaded = true;
         el.dropzone.hidden = true;
+        el.dropzone.style.display = 'none';
         calculateInitialFit();
         renderAll();
         showToast('✓ 照片已就绪，可拖拽、缩放及对齐构图');

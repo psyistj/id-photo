@@ -54,3 +54,16 @@ test('ID Photo Studio - 6寸相纸拼版行列容纳算法测试', () => {
   const rows2 = Math.floor((availableH + gap) / (579 + gap)); // 1125 / 599 = 1 行
   assert.ok(cols2 >= 3, '二寸照片横向至少容纳 3 张');
 });
+
+test('ID Photo Studio - CSS 必须包含 [hidden] 规则且 dropzone 隐藏逻辑有效', () => {
+  const css = fs.readFileSync(path.join(projectDir, 'style.css'), 'utf8');
+  assert.ok(
+    /\[hidden\]\s*\{\s*display:\s*none\s*!important;?\s*\}/.test(css),
+    'style.css 必须声明 [hidden] { display: none !important; } 以防止 .dropzone 的 display:flex 覆盖 hidden 属性'
+  );
+  const appJs = fs.readFileSync(path.join(projectDir, 'app.js'), 'utf8');
+  assert.ok(
+    appJs.includes("el.dropzone.style.display = 'none'"),
+    'app.js 需双重保障将 dropzone 的 style.display 设为 none'
+  );
+});
