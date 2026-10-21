@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#090a0f">
+  <title>ID Photo // 证件照智能裁剪与排版工坊</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f1118'/%3E%3Ccircle cx='16' cy='12' r='5' fill='%236366f1'/%3E%3Cpath d='M8 24c0-4.4 3.6-8 8-8s8 3.6 8 8' fill='%2338bdf8'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-box">📷</div>
+      <div class="title-group">
+        <h1>ID Photo <span class="title-sep">//</span> 证件照裁剪工坊</h1>
+        <p class="subtitle">标准一寸 / 二寸 / 护照 / 签证规格速裁 · 人像构图对齐 · 6寸相纸拼版打印</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="privacy-badge">
+        <span class="dot-live"></span>
+        <span>100% 浏览器本地离线计算 · 照片绝不上云</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Studio Workspace -->
+  <main class="studio-layout">
+    <!-- Center / Left Stage: Canvas Viewport & Stage Toolbar -->
+    <section class="stage-section">
+      <div class="canvas-viewport" id="viewport">
+        <!-- Background Grid pattern -->
+        <div class="viewport-backdrop"></div>
+
+        <!-- Canvas Container -->
+        <div class="canvas-container" id="canvasContainer">
+          <canvas id="photoCanvas"></canvas>
+          <canvas id="guideCanvas"></canvas>
+        </div>
+
+        <!-- Initial Upload Dropzone Overlay -->
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/jpg" class="sr-only">
+          <div class="dropzone-content">
+            <div class="dropzone-icon">👤</div>
+            <p class="dropzone-title">拖拽照片到此处，或 <span class="dropzone-btn">选择本地照片</span></p>
+            <p class="dropzone-desc">支持 PNG、JPG、WebP 高清人像照 · 自动保持原画质，所有裁剪与计算均在您的设备内完成</p>
+            <div class="dropzone-shortcuts">支持直接 <kbd>Ctrl/⌘ + V</kbd> 粘贴剪贴板截图</div>
+          </div>
+        </div>
+
+        <!-- Dimension Indicator Overlay -->
+        <div class="dim-pill" id="dimPill" hidden>
+          <span id="pillPreset">一寸</span>
+          <span class="dim-sep">·</span>
+          <span id="pillMm">25 × 35 mm</span>
+          <span class="dim-sep">·</span>
+          <span id="pillPx">295 × 413 px</span>
+        </div>
+      </div>
+
+      <!-- Stage Bottom Toolbar -->
+      <div class="stage-toolbar">
+        <div class="toolbar-group">
+          <button type="button" class="tool-btn" id="btnZoomOut" title="缩小 [ - ]"><span>−</span></button>
+          <div class="zoom-slider-wrap">
+            <input type="range" id="zoomSlider" min="0.2" max="4.0" step="0.02" value="1.0">
+            <span class="slider-val" id="zoomVal">100%</span>
+          </div>
+          <button type="button" class="tool-btn" id="btnZoomIn" title="放大 [ + ]"><span>+</span></button>
+        </div>
+
+        <div class="toolbar-sep"></div>
+
+        <div class="toolbar-group">
+          <button type="button" class="tool-btn" id="btnRotateLeft" title="逆时针旋转 90°"><span>↺ 90°</span></button>
+          <div class="rotate-slider-wrap" title="微调角度 ±45°">
+            <span class="slider-icon">∠</span>
+            <input type="range" id="rotateSlider" min="-45" max="45" step="0.5" value="0">
+            <span class="slider-val" id="rotateVal">0.0°</span>
+          </div>
+          <button type="button" class="tool-btn" id="btnRotateRight" title="顺时针旋转 90°"><span>↻ 90°</span></button>
+        </div>
+
+        <div class="toolbar-sep"></div>
+
+        <div class="toolbar-group">
+          <button type="button" class="tool-btn" id="btnFlipH" title="水平镜像翻转"><span>⇄ 镜像</span></button>
+          <button type="button" class="tool-btn" id="btnFit" title="自动适配居中"><span>⊡ 适配</span></button>
+          <button type="button" class="tool-btn" id="btnReset" title="恢复初始状态"><span>⟲ 重置</span></button>
+          <button type="button" class="tool-btn tool-btn-replace" id="btnReplace" title="更换图片"><span>📁 换图</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Sidebar: Controls & Export -->
+    <aside class="sidebar-section">
+      <!-- Card 1: 规格预设 -->
+      <div class="ctrl-card">
+        <div class="card-title">
+          <span>01. 证件照规格预设</span>
+          <span class="preset-tag" id="currentPresetTag">常用标准</span>
+        </div>
+
+        <div class="preset-grid" id="presetList">
+          <button type="button" class="preset-btn active" data-id="1inch" data-w-mm="25" data-h-mm="35" data-w-px="295" data-h-px="413">
+            <div class="p-name">一寸常用</div>
+            <div class="p-dim">25 × 35 mm</div>
+            <div class="p-px">295 × 413 px</div>
+          </button>
+          <button type="button" class="preset-btn" data-id="2inch" data-w-mm="35" data-h-mm="49" data-w-px="413" data-h-px="579">
+            <div class="p-name">二寸常用</div>
+            <div class="p-dim">35 × 49 mm</div>
+            <div class="p-px">413 × 579 px</div>
+          </button>
+          <button type="button" class="preset-btn" data-id="small1inch" data-w-mm="22" data-h-mm="32" data-w-px="260" data-h-px="378">
+            <div class="p-name">小一寸 (驾驶证)</div>
+            <div class="p-dim">22 × 32 mm</div>
+            <div class="p-px">260 × 378 px</div>
+          </button>
+          <button type="button" class="preset-btn" data-id="big1inch" data-w-mm="33" data-h-mm="48" data-w-px="390" data-h-px="567">
+            <div class="p-name">大一寸 / 中国护照</div>
+            <div class="p-dim">33 × 48 mm</div>
+            <div class="p-px">390 × 567 px</div>
+          </button>
+          <button type="button" class="preset-btn" data-id="small2inch" data-w-mm="33" data-h-mm="48" data-w-px="390" data-h-px="567">
+            <div class="p-name">小二寸 / 普通签证</div>
+            <div class="p-dim">33 × 48 mm</div>
+            <div class="p-px">390 × 567 px</div>
+          </button>
+          <button type="button" class="preset-btn" data-id="usVisa" data-w-mm="51" data-h-mm="51" data-w-px="600" data-h-px="600">
+            <div class="p-name">美签 / 2×2 英寸</div>
+            <div class="p-dim">51 × 51 mm</div>
+            <div class="p-px">600 × 600 px</div>
+          </button>
+          <button type="button" class="preset-btn" data-id="japanVisa" data-w-mm="45" data-h-mm="45" data-w-px="531" data-h-px="531">
+            <div class="p-name">日本签证</div>
+            <div class="p-dim">45 × 45 mm</div>
+            <div class="p-px">531 × 531 px</div>
+          </button>
+          <button type="button" class="preset-btn" data-id="custom" data-w-mm="0" data-h-mm="0" data-w-px="0" data-h-px="0">
+            <div class="p-name">⚙ 自定义尺寸</div>
+            <div class="p-dim">自由设定数值</div>
+            <div class="p-px">自定义 DPI</div>
+          </button>
+        </div>
+
+        <!-- Custom Spec Inputs -->
+        <div class="custom-panel" id="customPanel" hidden>
+          <div class="custom-row">
+            <div class="input-field">
+              <label for="customWidth">宽 (mm)</label>
+              <input type="number" id="customWidth" value="35" min="10" max="300" step="1">
+            </div>
+            <div class="input-field">
+              <label for="customHeight">高 (mm)</label>
+              <input type="number" id="customHeight" value="49" min="10" max="300" step="1">
+            </div>
+            <div class="input-field">
+              <label for="customDpi">DPI (分辨率)</label>
+              <input type="number" id="customDpi" value="300" min="72" max="600" step="1">
+            </div>
+          </div>
+          <button type="button" class="apply-custom-btn" id="btnApplyCustom">应用自定义尺寸</button>
+        </div>
+      </div>
+
+      <!-- Card 2: 构图辅助参考线 -->
+      <div class="ctrl-card">
+        <div class="card-title">
+          <span>02. 标准面部构图辅助标线</span>
+          <label class="switch-wrap">
+            <input type="checkbox" id="guideToggle" checked>
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+        <p class="guide-tip">开启黄金面部对齐参考线，拖拽照片对齐五官，确保证件照合规率：</p>
+        <div class="guide-legend">
+          <div class="legend-item"><span class="legend-line line-crown"></span> 头顶安全预留线 (约 8-10%)</div>
+          <div class="legend-item"><span class="legend-line line-eyes"></span> 眼睛基准水平线 (约 40-42%)</div>
+          <div class="legend-item"><span class="legend-line line-chin"></span> 下巴轮廓下沿线 (约 74-76%)</div>
+          <div class="legend-item"><span class="legend-line line-axis"></span> 面部中轴对称线 (50%)</div>
+        </div>
+      </div>
+
+      <!-- Card 3: 衬底背景色 -->
+      <div class="ctrl-card">
+        <div class="card-title">
+          <span>03. 底色填充预览</span>
+          <span class="card-subtitle">纯色衬底</span>
+        </div>
+        <div class="color-options" id="bgColorOptions">
+          <button type="button" class="color-btn active" data-color="transparent" title="原图透明底">
+            <span class="swatch swatch-transparent"></span>
+            <span class="color-label">原图底</span>
+          </button>
+          <button type="button" class="color-btn" data-color="#ffffff" title="纯白底 (#FFFFFF)">
+            <span class="swatch" style="background:#ffffff; border:1px solid #ddd;"></span>
+            <span class="color-label">白底</span>
+          </button>
+          <button type="button" class="color-btn" data-color="#1e6be6" title="标准蓝底 (#1E6BE6)">
+            <span class="swatch" style="background:#1e6be6;"></span>
+            <span class="color-label">蓝底</span>
+          </button>
+          <button type="button" class="color-btn" data-color="#c41818" title="标准红底 (#C41818)">
+            <span class="swatch" style="background:#c41818;"></span>
+            <span class="color-label">红底</span>
+          </button>
+          <button type="button" class="color-btn" data-color="#f5f7fa" title="浅灰底 (#F5F7FA)">
+            <span class="swatch" style="background:#f5f7fa;"></span>
+            <span class="color-label">浅灰</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 4: 导出与相纸拼版 -->
+      <div class="ctrl-card export-card">
+        <div class="card-title">
+          <span>04. 高清导出与打印拼版</span>
+        </div>
+
+        <div class="export-settings">
+          <div class="setting-row">
+            <span class="setting-label">导出格式：</span>
+            <div class="radio-group" id="formatGroup">
+              <label class="radio-label">
+                <input type="radio" name="format" value="image/jpeg" checked>
+                <span>JPG (标准冲印)</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="format" value="image/png">
+                <span>PNG (无损透明)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <span class="setting-label">文件体积目标：</span>
+            <select id="sizeLimitSelect" class="select-box">
+              <option value="orig" selected>冲印最佳品质 (Q=0.95 无压缩)</option>
+              <option value="100kb">报考/公务员限制 (文件 &lt; 100 KB)</option>
+              <option value="200kb">考试系统限制 (文件 &lt; 200 KB)</option>
+              <option value="50kb">极速上传限制 (文件 &lt; 50 KB)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button type="button" class="btn-primary" id="btnExportSingle">
+            <span class="btn-icon">⬇</span>
+            <span>导出高清单张证件照</span>
+          </button>
+          <button type="button" class="btn-secondary" id="btnExportPrint">
+            <span class="btn-icon">🖨</span>
+            <span>导出 6寸相纸排版 (4R 拼版)</span>
+          </button>
+        </div>
+        <p class="export-note">💡 6寸相纸拼版标准：102 × 152 mm (1205 × 1795 px @300DPI)，系统会自动按当前规格智能排满相纸，并附带精确裁切虚线，拿去照相馆或冲印店可直接冲印为标准相纸！</p>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast" hidden></div>
+</body>
+</html>
